@@ -3,273 +3,410 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redbul-FamQ | UKRAINE GTA</title>
+    <title>Форум Redbul-FamQ | UKRAINE GTA</title>
     <style>
         :root {
-            --bg-color: #0b0e14;
-            --card-bg: #151a23;
+            --forum-bg: #0d1117;
+            --header-bg: #161b22;
+            --card-bg: #1c2128;
+            --border-color: #30363d;
             --accent-red: #e63946;
-            --accent-blue: #1d3557;
+            --accent-blue: #2196f3;
             --accent-gold: #ffb703;
-            --text-color: #f1faee;
-            --text-muted: #a8dadc;
+            --text-main: #c9d1d9;
+            --text-white: #ffffff;
+            --text-muted: #8b949e;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--forum-bg);
+            color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
 
-        /* Шапка */
+        /* Верхня панель (Header) */
         .header {
-            text-align: center;
-            padding: 25px;
-            background: linear-gradient(135deg, #1d3557, #e63946);
-            border-radius: 12px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 20px rgba(230, 57, 70, 0.4);
+            background: linear-gradient(90deg, #0d1117 0%, #161b22 50%, #1a080a 100%);
+            border-bottom: 2px solid var(--accent-red);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        .header h1 {
-            margin: 0;
-            font-size: 2.5em;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+        .logo-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .header p {
-            margin: 8px 0 0;
-            color: var(--accent-gold);
+        .logo-icon {
+            background: var(--accent-red);
+            color: white;
             font-weight: bold;
-            font-size: 1.1em;
+            font-size: 1.4em;
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(230, 57, 70, 0.5);
         }
 
-        /* Сітка блоків */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
+        .logo-text h1 {
+            margin: 0;
+            font-size: 1.4em;
+            color: var(--text-white);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        /* Картки */
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 10px;
-            padding: 20px;
-            border-left: 4px solid var(--accent-red);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        .logo-text p {
+            margin: 2px 0 0;
+            font-size: 0.8em;
+            color: var(--accent-gold);
         }
 
-        .card h2 {
-            margin-top: 0;
-            font-size: 1.3em;
-            color: var(--accent-red);
-            border-bottom: 1px solid #2a3240;
-            padding-bottom: 10px;
+        /* Навігація вкладок (Форумне меню) */
+        .forum-nav {
+            background-color: var(--header-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            overflow-x: auto;
+            padding: 0 20px;
+        }
+
+        .nav-tab {
+            padding: 14px 20px;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            font-size: 0.95em;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        /* Оголошення */
-        .announcement {
-            background-color: rgba(230, 57, 70, 0.15);
-            border: 1px solid var(--accent-red);
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            line-height: 1.4;
+        .nav-tab:hover {
+            color: var(--text-white);
+            background-color: rgba(255,255,255,0.03);
         }
 
-        /* Калькулятор та Форми */
-        .calc-input {
+        .nav-tab.active {
+            color: var(--accent-red);
+            border-bottom-color: var(--accent-red);
+            background-color: rgba(230, 57, 70, 0.08);
+        }
+
+        /* Основний контейнер */
+        .container {
+            max-width: 1100px;
+            margin: 25px auto;
+            padding: 0 15px;
+        }
+
+        /* Вкладки з контентом */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Картки розділів форуму */
+        .forum-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .forum-card-header {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--text-white);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Оголошення */
+        .announcement-box {
+            background: rgba(230, 57, 70, 0.1);
+            border-left: 4px solid var(--accent-red);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        /* Поля вводу та кнопки */
+        .forum-input {
             width: 100%;
             padding: 10px;
             margin: 8px 0 15px;
-            background: #0b0e14;
-            border: 1px solid #2a3240;
-            color: #fff;
+            background: #0d1117;
+            border: 1px solid var(--border-color);
+            color: var(--text-white);
             border-radius: 6px;
             box-sizing: border-box;
             font-size: 0.95em;
         }
 
-        .calc-input:focus {
+        .forum-input:focus {
             outline: none;
             border-color: var(--accent-red);
         }
 
-        .calc-result {
-            background: #1d3557;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 10px;
-            font-size: 1.05em;
-            line-height: 1.6;
-        }
-
-        /* Списки */
-        .list-item {
-            padding: 10px 0;
-            border-bottom: 1px solid #2a3240;
-            font-size: 0.95em;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .list-item:last-child {
-            border-bottom: none;
-        }
-
-        .badge-warn { color: var(--accent-gold); font-weight: bold; }
-        .badge-danger { color: var(--accent-red); font-weight: bold; }
-        .badge-success { color: #4ed07d; font-weight: bold; }
-
-        /* Кнопки */
-        .btn-submit {
-            width: 100%;
-            padding: 12px;
+        .btn-forum {
             background: var(--accent-red);
             color: white;
             border: none;
+            padding: 10px 20px;
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: 0.3s;
+            transition: 0.2s;
         }
 
-        .btn-submit:hover {
+        .btn-forum:hover {
             background: #c1121f;
-            box-shadow: 0 0 10px rgba(230, 57, 70, 0.5);
         }
 
-        /* Перемикач Карт */
-        .map-btn-group {
+        /* Таблиці форуму */
+        .forum-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .forum-table th, .forum-table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .forum-table th {
+            background-color: #161b22;
+            color: var(--text-muted);
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+
+        .badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .badge-danger { background: rgba(230, 57, 70, 0.2); color: var(--accent-red); }
+        .badge-warn { background: rgba(255, 183, 3, 0.2); color: var(--accent-gold); }
+        .badge-success { background: rgba(78, 208, 125, 0.2); color: #4ed07d; }
+
+        /* Перемикач точок карт */
+        .sub-nav {
             display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
-        .map-btn {
-            flex: 1;
-            padding: 8px;
-            background: #0b0e14;
-            border: 1px solid #2a3240;
-            color: #fff;
+        .sub-btn {
+            padding: 8px 15px;
+            background: var(--header-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.85em;
         }
 
-        .map-btn.active {
+        .sub-btn.active {
             background: var(--accent-red);
+            color: white;
             border-color: var(--accent-red);
         }
     </style>
 </head>
 <body>
 
-    <!-- Шапка Сайту -->
+    <!-- Шапка у стилі форуму -->
     <div class="header">
-        <h1>🐂 REDBUL-FAMQ 🐂</h1>
-        <p>Офіційний портал сім'ї | UKRAINE GTA</p>
+        <div class="logo-block">
+            <div class="logo-icon">RF</div>
+            <div class="logo-text">
+                <h1>REDBUL-FAMQ</h1>
+                <p>Офіційний портал клану | UKRAINE GTA</p>
+            </div>
+        </div>
     </div>
 
-    <!-- Основний контент -->
-    <div class="grid">
+    <!-- Панель вкладок (Меню Форуму) -->
+    <div class="forum-nav">
+        <button class="nav-tab active" onclick="openTab('news')">📢 Головна та Новини</button>
+        <button class="nav-tab" onclick="openTab('calc')">🧰 Калькулятор Фарму</button>
+        <button class="nav-tab" onclick="openTab('maps')">🗺️ Карта Ресурсів</button>
+        <button class="nav-tab" onclick="openTab('lineup')">⚔️ Склад на Битви</button>
+        <button class="nav-tab" onclick="openTab('penalties')">🚨 Штрафи та Червоний список</button>
+        <button class="nav-tab" onclick="openTab('reports')">📄 Рапорти на Підвищення</button>
+    </div>
 
-        <!-- 1. Дошка оголошень -->
-        <div class="card">
-            <h2>📢 Головні Оголошення</h2>
-            <div class="announcement">
-                🔥 ЗБІР КЛАНУ: Сьогодні о 20:00 загальний збір біля кланхаусу на Битву за Бізнес! Бути всім в Discord!
+    <!-- Основна область із контентом -->
+    <div class="container">
+
+        <!-- Вкладка 1: Головна та Новини -->
+        <div id="news" class="tab-content active">
+            <div class="forum-card">
+                <div class="forum-card-header">📢 Важливі Оголошення Від Керівництва</div>
+                <div class="announcement-box">
+                    <strong style="color: var(--accent-red);">🔥 ЗБІР КЛАНУ:</strong> Сьогодні о <b>20:00</b> загальний збір біля кланхаусу на Битву за Бізнес! Всім бути в Discord!
+                </div>
+                <p style="color: var(--text-muted); line-height: 1.6;">
+                    Ласкаво просимо на офіційний портал клану <b>Redbul-FamQ</b>. Тут ви можете ознайомитися з правилами, подати рапорт на підвищення, переглянути точки фарму та порахувати свій прибуток.
+                </p>
             </div>
-            <p style="margin-top: 15px; font-size: 0.9em; color: var(--text-muted);">
-                📌 Нагадування: Ремонт та заправка автопарку — обов'язок кожного, хто бере машини з гаража.
-            </p>
-        </div>
 
-        <!-- 2. Ігровий Калькулятор -->
-        <div class="card">
-            <h2>🧰 Калькулятор Прибутку</h2>
-            <label>Кількість замальованих Графіті:</label>
-            <input type="number" id="graffiti" class="calc-input" placeholder="Введіть кількість..." oninput="calculate()">
-            
-            <label>Зібрано Алко / Сировини (шт):</label>
-            <input type="number" id="alcohol" class="calc-input" placeholder="Введіть кількість..." oninput="calculate()">
-
-            <div class="calc-result">
-                💰 Чистий прибуток: <span id="total-money" style="color: #4ed07d; font-weight: bold;">0</span> грн<br>
-                📊 Внесок у фонд клану (10%): <span id="clan-fee" style="color: var(--accent-gold); font-weight: bold;">0</span> грн
-            </div>
-        </div>
-
-        <!-- 3. Карта ресурсів -->
-        <div class="card">
-            <h2>🗺️ Точки Ресурсів та Фарму</h2>
-            <div class="map-btn-group">
-                <button class="map-btn active" onclick="showMap('graffiti')">🎨 Графіті</button>
-                <button class="map-btn" onclick="showMap('alco')">🍾 Алко</button>
-                <button class="map-btn" onclick="showMap('stash')">📦 Закладки</button>
-            </div>
-            
-            <div id="map-info">
-                <div class="list-item"><span>🔴 Графіті #1-5:</span> <b>Промислова зона</b></div>
-                <div class="list-item"><span>🔴 Графіті #6-10:</span> <b>Центр міста</b></div>
-                <div class="list-item"><span>🔴 Графіті #11-15:</span> <b>Приміська траса</b></div>
+            <div class="forum-card">
+                <div class="forum-card-header">📌 Правила Автопарку та Клану</div>
+                <ul style="line-height: 1.8; color: var(--text-main);">
+                    <li>Після використання кланового авто обов'язково заправте та відремонтуйте його.</li>
+                    <li>Заборонено вогонь по своїх (ТК) та неповагу до сокланівців.</li>
+                    <li>Явка на обов'язкові збори клану є строгою (за відсутність — догана).</li>
+                </ul>
             </div>
         </div>
 
-        <!-- 4. Склад на Битву (Line-up) -->
-        <div class="card">
-            <h2>⚔️ Склад на Забив (Line-up)</h2>
-            <div class="list-item"><span>🎯 Снайпери:</span> <b>Player_1, Player_2</b></div>
-            <div class="list-item"><span>💥 Штурмовий загін:</span> <b>Player_3, Player_4, Player_5</b></div>
-            <div class="list-item"><span>📡 Координатор:</span> <span class="badge-success">Лідер Redbul</span></div>
-            <div class="list-item"><span>⏱️ Час збору:</span> <span class="badge-warn">19:45 біля Кланхаусу</span></div>
-        </div>
+        <!-- Вкладка 2: Калькулятор -->
+        <div id="calc" class="tab-content">
+            <div class="forum-card">
+                <div class="forum-card-header">🧰 Розрахунок Прибутку та Внеску</div>
+                <label>Кількість замальованих Графіті:</label>
+                <input type="number" id="graffiti" class="forum-input" placeholder="Введіть кількість..." oninput="calculate()">
 
-        <!-- 5. Дисципліна та Штрафи -->
-        <div class="card">
-            <h2>🚨 Штрафи та Догани</h2>
-            <div class="list-item">
-                <span><b>Vanya_Pro</b> (ID 4012)</span>
-                <span class="badge-warn">Догана 1/3</span>
-            </div>
-            <div class="list-item">
-                <span><b>Oleg_Top</b> (ID 8819)</span>
-                <span class="badge-danger">Штраф 25,000 грн</span>
-            </div>
-            <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #2a3240;">
-                <span style="color: var(--accent-red); font-weight: bold;">⛔ BLACKLIST:</span>
-                <div style="font-size: 0.9em; margin-top: 5px; color: var(--text-muted);">
-                    Dimka_Rider (ID 12049) — Обман керівництва клану
+                <label>Зібрано Алко / Сировини (шт):</label>
+                <input type="number" id="alcohol" class="forum-input" placeholder="Введіть кількість..." oninput="calculate()">
+
+                <div style="background: #161b22; padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); line-height: 1.8;">
+                    💰 Чистий прибуток: <span id="total-money" style="color: #4ed07d; font-weight: bold;">0</span> грн<br>
+                    📊 Внесок у фонд клану (10%): <span id="clan-fee" style="color: var(--accent-gold); font-weight: bold;">0</span> грн
                 </div>
             </div>
         </div>
 
-        <!-- 6. Форма рапорту -->
-        <div class="card">
-            <h2>📄 Подати Рапорт на Підвищення</h2>
-            <form onsubmit="submitReport(event)">
-                <input type="text" class="calc-input" placeholder="Ваш Нік та Static ID (напр. Ivan_Drak 1024)" required>
-                <input type="text" class="calc-input" placeholder="Поточний ранг -> Ранг на який претендуєте" required>
-                <input type="url" class="calc-input" placeholder="Посилання на докази (Imgur / Postimages)" required>
-                <button type="submit" class="btn-submit">Надіслати рапорт</button>
-            </form>
+        <!-- Вкладка 3: Карта Ресурсів -->
+        <div id="maps" class="tab-content">
+            <div class="forum-card">
+                <div class="forum-card-header">🗺️ Точки Ресурсів для Фарму</div>
+                <div class="sub-nav">
+                    <button class="sub-btn active" onclick="showMapType('graffiti')">🎨 Графіті</button>
+                    <button class="sub-btn" onclick="showMapType('alco')">🍾 Алко</button>
+                    <button class="sub-btn" onclick="showMapType('stash')">📦 Закладки</button>
+                </div>
+
+                <div id="map-info">
+                    <table class="forum-table">
+                        <thead>
+                            <tr><th>Тип</th><th>Локація</th><th>Примітка</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>🔴 Графіті #1-5</td><td>Промислова зона</td><td>Швидкий об'їзд на мотоциклі</td></tr>
+                            <tr><td>🔴 Графіті #6-10</td><td>Центр міста</td><td>Високий ризик перестрілок</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Вкладка 4: Склад на Битву -->
+        <div id="lineup" class="tab-content">
+            <div class="forum-card">
+                <div class="forum-card-header">⚔️ Розподіл Складу на Битву (Line-up)</div>
+                <table class="forum-table">
+                    <thead>
+                        <tr><th>Роль</th><th>Гравці</th><th>Статус</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>🎯 Снайпери</td><td>Player_1, Player_2</td><td><span class="badge badge-success">Готові</span></td></tr>
+                        <tr><td>💥 Штурм</td><td>Player_3, Player_4, Player_5</td><td><span class="badge badge-success">Готові</span></td></tr>
+                        <tr><td>📡 Координатор</td><td>Лідер Redbul</td><td><span class="badge badge-warn">В мережі</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Вкладка 5: Штрафи та Blacklist -->
+        <div id="penalties" class="tab-content">
+            <div class="forum-card">
+                <div class="forum-card-header">🚨 Дисциплінарна Дошка та Чорний Список</div>
+                <table class="forum-table">
+                    <thead>
+                        <tr><th>Нік (ID)</th><th>Порушення</th><th>Покарання</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Vanya_Pro (ID 4012)</td><td>Нез'явлення на збір</td><td><span class="badge badge-warn">Догана 1/3</span></td></tr>
+                        <tr><td>Oleg_Top (ID 8819)</td><td>Авто без палива</td><td><span class="badge badge-danger">Штраф 25k грн</span></td></tr>
+                        <tr style="background: rgba(230,57,70,0.05);">
+                            <td><strong style="color:var(--accent-red)">⛔ Dimka_Rider (ID 12049)</strong></td>
+                            <td>Обман керівництва</td>
+                            <td><span class="badge badge-danger">BLACKLIST</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Вкладка 6: Рапорти -->
+        <div id="reports" class="tab-content">
+            <div class="forum-card">
+                <div class="forum-card-header">📄 Подача Рапорту на Підвищення</div>
+                <form onsubmit="submitReport(event)">
+                    <label>Ваш Ігровий Нік та Static ID:</label>
+                    <input type="text" class="forum-input" placeholder="Наприклад: Ivan_Drak (1024)" required>
+
+                    <label>Поточний ранг ➔ На який підвищуєтесь:</label>
+                    <input type="text" class="forum-input" placeholder="Наприклад: 1 ➔ 2 ранг" required>
+
+                    <label>Посилання на докази виконаної роботи (Imgur / Postimages):</label>
+                    <input type="url" class="forum-input" placeholder="https://imgur.com/..." required>
+
+                    <button type="submit" class="btn-forum">Надіслати рапорт</button>
+                </form>
+            </div>
         </div>
 
     </div>
 
-    <!-- Скрипти JS -->
+    <!-- JavaScript для роботи вкладок -->
     <script>
+        // Перемикання головних вкладок форуму
+        function openTab(tabId) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
         // Розрахунок калькулятора
         function calculate() {
             const graffiti = parseFloat(document.getElementById('graffiti').value) || 0;
@@ -283,35 +420,44 @@
         }
 
         // Перемикання точок на карті
-        function showMap(type) {
-            const buttons = document.querySelectorAll('.map-btn');
+        function showMapType(type) {
+            const buttons = document.querySelectorAll('.sub-btn');
             buttons.forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
 
             const mapInfo = document.getElementById('map-info');
             if(type === 'graffiti') {
                 mapInfo.innerHTML = `
-                    <div class="list-item"><span>🔴 Графіті #1-5:</span> <b>Промислова зона</b></div>
-                    <div class="list-item"><span>🔴 Графіті #6-10:</span> <b>Центр міста</b></div>
-                    <div class="list-item"><span>🔴 Графіті #11-15:</span> <b>Приміська траса</b></div>
-                `;
+                    <table class="forum-table">
+                        <thead><tr><th>Тип</th><th>Локація</th><th>Примітка</th></tr></thead>
+                        <tbody>
+                            <tr><td>🔴 Графіті #1-5</td><td>Промислова зона</td><td>Швидкий об'їзд на мотоциклі</td></tr>
+                            <tr><td>🔴 Графіті #6-10</td><td>Центр міста</td><td>Високий ризик перестрілок</td></tr>
+                        </tbody>
+                    </table>`;
             } else if(type === 'alco') {
                 mapInfo.innerHTML = `
-                    <div class="list-item"><span>🟢 Точка Алко #1:</span> <b>Закинутий склад</b></div>
-                    <div class="list-item"><span>🟢 Точка Алко #2:</span> <b>Ангар біля річки</b></div>
-                `;
+                    <table class="forum-table">
+                        <thead><tr><th>Тип</th><th>Локація</th><th>Примітка</th></tr></thead>
+                        <tbody>
+                            <tr><td>🟢 Алко-точка #1</td><td>Закинутий склад</td><td>Збір сировини кожні 2 години</td></tr>
+                        </tbody>
+                    </table>`;
             } else if(type === 'stash') {
                 mapInfo.innerHTML = `
-                    <div class="list-item"><span>🔵 Сховок #1:</span> <b>Під мостом Южний</b></div>
-                    <div class="list-item"><span>🔵 Сховок #2:</span> <b>Північна дамба</b></div>
-                `;
+                    <table class="forum-table">
+                        <thead><tr><th>Тип</th><th>Локація</th><th>Примітка</th></tr></thead>
+                        <tbody>
+                            <tr><td>🔵 Сховок #1</td><td>Північна дамба</td><td>Перевіряти після аірдропів</td></tr>
+                        </tbody>
+                    </table>`;
             }
         }
 
         // Подача рапорту
         function submitReport(event) {
             event.preventDefault();
-            alert('✅ Дякуємо! Ваш рапорт успішно відправлено на перевірку старшому складу Redbul-FamQ.');
+            alert('✅ Рапорт успішно відправлено на перевірку старшому складу клану!');
             event.target.reset();
         }
     </script>
