@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redbul-FamQ | UKRAINE GTA</title>
+    <style>
+        :root {
+            --bg-color: #0b0e14;
+            --card-bg: #151a23;
+            --accent-red: #e63946;
+            --accent-blue: #1d3557;
+            --accent-gold: #ffb703;
+            --text-color: #f1faee;
+            --text-muted: #a8dadc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Шапка */
+        .header {
+            text-align: center;
+            padding: 25px;
+            background: linear-gradient(135deg, #1d3557, #e63946);
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(230, 57, 70, 0.4);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+        }
+
+        .header p {
+            margin: 8px 0 0;
+            color: var(--accent-gold);
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        /* Сітка блоків */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        /* Картки */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid var(--accent-red);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.3em;
+            color: var(--accent-red);
+            border-bottom: 1px solid #2a3240;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Оголошення */
+        .announcement {
+            background-color: rgba(230, 57, 70, 0.15);
+            border: 1px solid var(--accent-red);
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            line-height: 1.4;
+        }
+
+        /* Калькулятор та Форми */
+        .calc-input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 15px;
+            background: #0b0e14;
+            border: 1px solid #2a3240;
+            color: #fff;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.95em;
+        }
+
+        .calc-input:focus {
+            outline: none;
+            border-color: var(--accent-red);
+        }
+
+        .calc-result {
+            background: #1d3557;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 1.05em;
+            line-height: 1.6;
+        }
+
+        /* Списки */
+        .list-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #2a3240;
+            font-size: 0.95em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .badge-warn { color: var(--accent-gold); font-weight: bold; }
+        .badge-danger { color: var(--accent-red); font-weight: bold; }
+        .badge-success { color: #4ed07d; font-weight: bold; }
+
+        /* Кнопки */
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-red);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+
+        .btn-submit:hover {
+            background: #c1121f;
+            box-shadow: 0 0 10px rgba(230, 57, 70, 0.5);
+        }
+
+        /* Перемикач Карт */
+        .map-btn-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .map-btn {
+            flex: 1;
+            padding: 8px;
+            background: #0b0e14;
+            border: 1px solid #2a3240;
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        .map-btn.active {
+            background: var(--accent-red);
+            border-color: var(--accent-red);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Шапка Сайту -->
+    <div class="header">
+        <h1>🐂 REDBUL-FAMQ 🐂</h1>
+        <p>Офіційний портал сім'ї | UKRAINE GTA</p>
+    </div>
+
+    <!-- Основний контент -->
+    <div class="grid">
+
+        <!-- 1. Дошка оголошень -->
+        <div class="card">
+            <h2>📢 Головні Оголошення</h2>
+            <div class="announcement">
+                🔥 ЗБІР КЛАНУ: Сьогодні о 20:00 загальний збір біля кланхаусу на Битву за Бізнес! Бути всім в Discord!
+            </div>
+            <p style="margin-top: 15px; font-size: 0.9em; color: var(--text-muted);">
+                📌 Нагадування: Ремонт та заправка автопарку — обов'язок кожного, хто бере машини з гаража.
+            </p>
+        </div>
+
+        <!-- 2. Ігровий Калькулятор -->
+        <div class="card">
+            <h2>🧰 Калькулятор Прибутку</h2>
+            <label>Кількість замальованих Графіті:</label>
+            <input type="number" id="graffiti" class="calc-input" placeholder="Введіть кількість..." oninput="calculate()">
+            
+            <label>Зібрано Алко / Сировини (шт):</label>
+            <input type="number" id="alcohol" class="calc-input" placeholder="Введіть кількість..." oninput="calculate()">
+
+            <div class="calc-result">
+                💰 Чистий прибуток: <span id="total-money" style="color: #4ed07d; font-weight: bold;">0</span> грн<br>
+                📊 Внесок у фонд клану (10%): <span id="clan-fee" style="color: var(--accent-gold); font-weight: bold;">0</span> грн
+            </div>
+        </div>
+
+        <!-- 3. Карта ресурсів -->
+        <div class="card">
+            <h2>🗺️ Точки Ресурсів та Фарму</h2>
+            <div class="map-btn-group">
+                <button class="map-btn active" onclick="showMap('graffiti')">🎨 Графіті</button>
+                <button class="map-btn" onclick="showMap('alco')">🍾 Алко</button>
+                <button class="map-btn" onclick="showMap('stash')">📦 Закладки</button>
+            </div>
+            
+            <div id="map-info">
+                <div class="list-item"><span>🔴 Графіті #1-5:</span> <b>Промислова зона</b></div>
+                <div class="list-item"><span>🔴 Графіті #6-10:</span> <b>Центр міста</b></div>
+                <div class="list-item"><span>🔴 Графіті #11-15:</span> <b>Приміська траса</b></div>
+            </div>
+        </div>
+
+        <!-- 4. Склад на Битву (Line-up) -->
+        <div class="card">
+            <h2>⚔️ Склад на Забив (Line-up)</h2>
+            <div class="list-item"><span>🎯 Снайпери:</span> <b>Player_1, Player_2</b></div>
+            <div class="list-item"><span>💥 Штурмовий загін:</span> <b>Player_3, Player_4, Player_5</b></div>
+            <div class="list-item"><span>📡 Координатор:</span> <span class="badge-success">Лідер Redbul</span></div>
+            <div class="list-item"><span>⏱️ Час збору:</span> <span class="badge-warn">19:45 біля Кланхаусу</span></div>
+        </div>
+
+        <!-- 5. Дисципліна та Штрафи -->
+        <div class="card">
+            <h2>🚨 Штрафи та Догани</h2>
+            <div class="list-item">
+                <span><b>Vanya_Pro</b> (ID 4012)</span>
+                <span class="badge-warn">Догана 1/3</span>
+            </div>
+            <div class="list-item">
+                <span><b>Oleg_Top</b> (ID 8819)</span>
+                <span class="badge-danger">Штраф 25,000 грн</span>
+            </div>
+            <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #2a3240;">
+                <span style="color: var(--accent-red); font-weight: bold;">⛔ BLACKLIST:</span>
+                <div style="font-size: 0.9em; margin-top: 5px; color: var(--text-muted);">
+                    Dimka_Rider (ID 12049) — Обман керівництва клану
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Форма рапорту -->
+        <div class="card">
+            <h2>📄 Подати Рапорт на Підвищення</h2>
+            <form onsubmit="submitReport(event)">
+                <input type="text" class="calc-input" placeholder="Ваш Нік та Static ID (напр. Ivan_Drak 1024)" required>
+                <input type="text" class="calc-input" placeholder="Поточний ранг -> Ранг на який претендуєте" required>
+                <input type="url" class="calc-input" placeholder="Посилання на докази (Imgur / Postimages)" required>
+                <button type="submit" class="btn-submit">Надіслати рапорт</button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- Скрипти JS -->
+    <script>
+        // Розрахунок калькулятора
+        function calculate() {
+            const graffiti = parseFloat(document.getElementById('graffiti').value) || 0;
+            const alcohol = parseFloat(document.getElementById('alcohol').value) || 0;
+
+            const total = (graffiti * 15000) + (alcohol * 5000);
+            const fee = total * 0.10;
+
+            document.getElementById('total-money').innerText = total.toLocaleString();
+            document.getElementById('clan-fee').innerText = fee.toLocaleString();
+        }
+
+        // Перемикання точок на карті
+        function showMap(type) {
+            const buttons = document.querySelectorAll('.map-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const mapInfo = document.getElementById('map-info');
+            if(type === 'graffiti') {
+                mapInfo.innerHTML = `
+                    <div class="list-item"><span>🔴 Графіті #1-5:</span> <b>Промислова зона</b></div>
+                    <div class="list-item"><span>🔴 Графіті #6-10:</span> <b>Центр міста</b></div>
+                    <div class="list-item"><span>🔴 Графіті #11-15:</span> <b>Приміська траса</b></div>
+                `;
+            } else if(type === 'alco') {
+                mapInfo.innerHTML = `
+                    <div class="list-item"><span>🟢 Точка Алко #1:</span> <b>Закинутий склад</b></div>
+                    <div class="list-item"><span>🟢 Точка Алко #2:</span> <b>Ангар біля річки</b></div>
+                `;
+            } else if(type === 'stash') {
+                mapInfo.innerHTML = `
+                    <div class="list-item"><span>🔵 Сховок #1:</span> <b>Під мостом Южний</b></div>
+                    <div class="list-item"><span>🔵 Сховок #2:</span> <b>Північна дамба</b></div>
+                `;
+            }
+        }
+
+        // Подача рапорту
+        function submitReport(event) {
+            event.preventDefault();
+            alert('✅ Дякуємо! Ваш рапорт успішно відправлено на перевірку старшому складу Redbul-FamQ.');
+            event.target.reset();
+        }
+    </script>
+</body>
+</html>
