@@ -1,105 +1,237 @@
-<!-- Блок із формою без зайвих надписів -->
-<div class="forum-card">
-    <!-- Вбудована Google Форма -->
-    <div style="position: relative; overflow: hidden; padding-top: 85%; border-radius: 8px; border: 1px solid var(--border-color);">
-        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScviiwCOX9ySsDAVYzOlM-ui3aj5EmW5BiXdbOq24plOhl3-w/viewform?embedded=true" 
-                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
-                frameborder="0" marginheight="0" marginwidth="0">Завантаження форми...</iframe>
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Карта Визволення</title>
+    
+    <!-- Підключаємо Leaflet CSS (для карти) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Меню як на скріншоті */
+        .menu-box {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(30, 30, 30, 0.9);
+            color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            z-index: 1000;
+            min-width: 140px;
+        }
+
+        .menu-title {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 5px;
+            text-align: left;
+            font-size: 13px;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        .btn.active {
+            background: #4a5568;
+            border-color: #63b3ed;
+        }
+
+        .btn-blue {
+            border-left: 4px solid #3182ce;
+        }
+
+        .btn-red {
+            border-left: 4px solid #e53e3e;
+        }
+
+        /* Підказка знизу */
+        .bottom-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 1000;
+            pointer-events: none;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Меню вибору -->
+    <div class="menu-box">
+        <div class="menu-title">Режим малювання</div>
+        <button class="btn btn-blue active" id="btnLiberate" onclick="setMode('liberate')">Визволення 🇺🇦</button>
+        <button class="btn btn-red" id="btnOccupy" onclick="setMode('occupy')">Окупація 🏴‍☠️</button>
+        <button class="btn" onclick="clearLayers()">Очистити все</button>
     </div>
 
-    <!-- Кнопка відкриття модального вікна -->
-    <button onclick="openModal()" style="
-        width: 100%;
-        margin-top: 15px;
-        padding: 14px 20px;
-        background: linear-gradient(135deg, #e63946 0%, #b1121f 100%);
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
-        transition: transform 0.2s, background 0.2s;
-    " onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
-        📊 Відкрити таблицю перевірки рапортів
-    </button>
-</div>
+    <!-- Підказка -->
+    <div class="bottom-hint">1 палець — малювати лінію | 2 пальці — рухати карту</div>
 
-<!-- Вспливаюче модальне вікно (Modal Popup) -->
-<div id="tableModal" style="
-    display: none; 
-    position: fixed; 
-    z-index: 9999; 
-    left: 0; 
-    top: 0; 
-    width: 100%; 
-    height: 100%; 
-    background-color: rgba(0, 0, 0, 0.85); 
-    backdrop-filter: blur(5px);
-    align-items: center;
-    justify-content: center;
-">
-    <div style="
-        background-color: #161b22; 
-        border: 1px solid #30363d; 
-        border-radius: 12px; 
-        width: 90%; 
-        max-width: 1000px; 
-        padding: 20px; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-        position: relative;
-        animation: modalFadeIn 0.3s ease;
-    ">
-        <!-- Шапка вікна з кнопкою закриття -->
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 12px; margin-bottom: 15px;">
-            <h3 style="margin: 0; color: #fff; font-size: 1.2em; display: flex; align-items: center; gap: 8px;">
-                📊 Таблиця Перевірки Рапортів
-            </h3>
-            <button onclick="closeModal()" style="
-                background: rgba(255,255,255,0.1); 
-                border: none; 
-                color: #fff; 
-                font-size: 20px; 
-                font-weight: bold; 
-                width: 36px; 
-                height: 36px; 
-                border-radius: 50%; 
-                cursor: pointer;
-                transition: background 0.2s;
-            " onmouseover="this.style.background='#e63946'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✕</button>
-        </div>
+    <!-- Карта -->
+    <div id="map"></div>
 
-        <!-- Таблиця всередині вспливаючого вікна -->
-        <div style="position: relative; overflow: hidden; padding-top: 55%; border-radius: 8px; border: 1px solid #30363d;">
-            <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vScRLQ4kGFShg5Eq5SLZAnQl231sEFhYrKvC1qmaWxZe2AHDJjhwNRgr-nq4wuELO1gjv1AkggWKuCk/pubhtml?widget=true&amp;headers=false" 
-                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;">Завантаження таблиці...</iframe>
-        </div>
-    </div>
-</div>
+    <!-- Підключаємо Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<!-- Анімація та скрипт управління вікном -->
-<style>
-@keyframes modalFadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-</style>
+    <script>
+        // Ініціалізація карти (центрируємо на Олешки/Херсон)
+        const map = L.map('map', {
+            zoomControl: true,
+            touchZoom: true
+        }).setView([46.62, 32.72], 12);
 
-<script>
-function openModal() {
-    document.getElementById('tableModal').style.display = 'flex';
-}
+        // Додаємо шар карти OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
 
-function closeModal() {
-    document.getElementById('tableModal').style.display = 'none';
-}
+        let currentMode = 'liberate'; // 'liberate' або 'occupy'
+        let isDrawing = false;
+        let drawnPoints = [];
+        let tempPolyline = null;
 
-// Закриття вікна при кліку поза ним
-window.onclick = function(event) {
-    const modal = document.getElementById('tableModal');
-    if (event.target === modal) {
-        modal.style.display = 'none';
-    }
-}
-</script>
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('btnLiberate').classList.toggle('active', mode === 'liberate');
+            document.getElementById('btnOccupy').classList.toggle('active', mode === 'occupy');
+        }
+
+        // Початкова демо-зона (симуляція окупованої території на півдні)
+        const demoOccupiedZone = [
+            [46.60, 32.65],
+            [46.65, 32.70],
+            [46.63, 32.80],
+            [46.55, 32.78],
+            [46.56, 32.66]
+        ];
+        L.polygon(demoOccupiedZone, {
+            color: '#e53e3e',
+            fillColor: '#f56565',
+            fillOpacity: 0.4,
+            weight: 1
+        }).addTo(map);
+
+        // Події малювання на карті
+        const mapContainer = document.getElementById('map');
+
+        function startDraw(e) {
+            // Малюємо, тільки якщо 1 палець або ліва кнопка миші
+            if (e.touches && e.touches.length > 1) return;
+
+            isDrawing = true;
+            map.dragging.disable(); // Вимикаємо перетягування карти під час малювання
+
+            const latLng = getLatLngFromEvent(e);
+            if (latLng) {
+                drawnPoints = [latLng];
+                tempPolyline = L.polyline(drawnPoints, {
+                    color: currentMode === 'liberate' ? '#3182ce' : '#e53e3e',
+                    dashArray: '6, 8', // Пунктирна лінія, як на скріншоті
+                    weight: 3
+                }).addTo(map);
+            }
+        }
+
+        function moveDraw(e) {
+            if (!isDrawing) return;
+            if (e.touches && e.touches.length > 1) return;
+
+            const latLng = getLatLngFromEvent(e);
+            if (latLng) {
+                drawnPoints.push(latLng);
+                tempPolyline.setLatLngs(drawnPoints);
+            }
+        }
+
+        function stopDraw() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            map.dragging.enable(); // Вмикаємо перетягування карти назад
+
+            if (tempPolyline) {
+                map.removeLayer(tempPolyline);
+            }
+
+            // Якщо намальовано достатньо точок — створюємо зафарбовану зону
+            if (drawnPoints.length > 5) {
+                const isLiberate = currentMode === 'liberate';
+                L.polygon(drawnPoints, {
+                    color: isLiberate ? '#3182ce' : '#e53e3e',
+                    fillColor: isLiberate ? '#63b3ed' : '#f56565',
+                    fillOpacity: 0.5,
+                    weight: 2
+                }).addTo(map);
+            }
+
+            drawnPoints = [];
+        }
+
+        function getLatLngFromEvent(e) {
+            let clientX, clientY;
+            if (e.touches && e.touches[0]) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            const containerPoint = L.point(clientX, clientY);
+            return map.containerPointToLatLng(containerPoint);
+        }
+
+        // Прив'язка подій до контейнера
+        mapContainer.addEventListener('mousedown', startDraw);
+        mapContainer.addEventListener('mousemove', moveDraw);
+        window.addEventListener('mouseup', stopDraw);
+
+        mapContainer.addEventListener('touchstart', startDraw, { passive: false });
+        mapContainer.addEventListener('touchmove', moveDraw, { passive: false });
+        window.addEventListener('touchend', stopDraw);
+
+        function clearLayers() {
+            map.eachLayer((layer) => {
+                if (layer instanceof L.Polygon) {
+                    map.removeLayer(layer);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
