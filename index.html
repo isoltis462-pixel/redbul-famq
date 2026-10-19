@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кино-Вселенная (YouTube Player)</title>
+    <title>Кино-Вселенная</title>
     <style>
         :root {
             --bg-color: #0d0d0d;
@@ -34,6 +34,19 @@
             margin: 0;
             text-transform: uppercase;
             font-size: 1.5rem;
+        }
+        /* Маленькая квадратная желтая кнопка вместо текста */
+        .admin-square-btn {
+            width: 30px;
+            height: 30px;
+            background-color: var(--accent);
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .admin-square-btn:hover {
+            background-color: var(--accent-hover);
+            transform: scale(1.05);
         }
         .btn {
             background-color: var(--accent);
@@ -80,7 +93,7 @@
         .player-container {
             position: relative;
             width: 100%;
-            padding-top: 56.25%; /* Соотношение сторон 16:9 */
+            padding-top: 56.25%; /* 16:9 */
             background: #000;
             border: 1px solid var(--border);
             margin-top: 15px;
@@ -144,7 +157,8 @@
 
     <header>
         <h1>Кино-Вселенная</h1>
-        <button class="btn" onclick="openAdminPanel()">Админ-панель</button>
+        <!-- Маленькая желтая кнопка-квадрат для открытия админки -->
+        <button class="admin-square-btn" onclick="openAdminPanel()" title="Админ-панель"></button>
     </header>
 
     <!-- Основной блок просмотра -->
@@ -166,7 +180,7 @@
             </div>
 
             <div id="playerWrapper">
-                <div class="empty-notice" id="emptyNotice">Нет доступных видео. Добавьте сериал через админ-панель.</div>
+                <div class="empty-notice" id="emptyNotice">Нет доступных видео. Нажмите на желтый квадрат в правом верхнем углу (пароль: 12345678), чтобы добавить сериал!</div>
                 <div class="player-container" id="playerBox" style="display: none;">
                     <div id="videoSlot"></div>
                 </div>
@@ -189,7 +203,7 @@
                 <button class="btn" onclick="checkPassword()">Войти</button>
             </div>
 
-            <!-- Интерфейс управления (скрыт до ввода пароля) -->
+            <!-- Интерфейс управления -->
             <div id="adminPanelContent" style="display: none;">
                 
                 <div class="admin-section-title">1. Добавить новый сериал</div>
@@ -229,20 +243,8 @@
     </div>
 
     <script>
-        // Данные по умолчанию или из памяти браузера
-        let db = JSON.parse(localStorage.getItem('kino_db_yt')) || [
-            {
-                name: "Стройка (Пример)",
-                seasons: [
-                    {
-                        name: "Сезон 1",
-                        episodes: [
-                            { name: "Эпизод 1", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }
-                        ]
-                    }
-                ]
-            }
-        ];
+        // Чистая база данных
+        let db = JSON.parse(localStorage.getItem('kino_db_yt')) || [];
 
         function saveData() {
             localStorage.setItem('kino_db_yt', JSON.stringify(db));
@@ -304,14 +306,16 @@
             playEpisode();
         }
 
-        // Автоконвертация ссылки YouTube в iframe и запуск
         function playEpisode() {
             const sIndex = document.getElementById('seriesSelect').value;
             const seaIndex = document.getElementById('seasonSelect').value;
             const epIndex = document.getElementById('episodeSelect').value;
             const videoSlot = document.getElementById('videoSlot');
 
-            if (sIndex === '' || seaIndex === '' || epIndex === '') return;
+            if (sIndex === '' || seaIndex === '' || epIndex === '') {
+                videoSlot.innerHTML = '';
+                return;
+            }
 
             let ep = db[sIndex].seasons[seaIndex].episodes[epIndex];
             if (!ep) return;
@@ -326,13 +330,12 @@
                 let videoId = url.split('youtu.be/')[1].split('?')[0];
                 embedUrl = `https://www.youtube.com/embed/${videoId}`;
             } else {
-                embedUrl = url; // Если вдруг вставлена прямая embed ссылка
+                embedUrl = url;
             }
 
             videoSlot.innerHTML = `<iframe src="${embedUrl}" allowfullscreen></iframe>`;
         }
 
-        // Управление админ-панелью
         function openAdminPanel() {
             document.getElementById('adminModal').style.display = 'flex';
             document.getElementById('adminPassword').value = '';
@@ -351,7 +354,7 @@
                 document.getElementById('adminPanelContent').style.display = 'block';
                 initAdminSelectors();
             } else {
-                alert('Неверный пароль! (Подсказка: 12345678)');
+                alert('Неверный пароль!');
             }
         }
 
@@ -360,6 +363,12 @@
             const adminEpSeries = document.getElementById('adminEpSeriesSelect');
             adminSeries.innerHTML = '';
             adminEpSeries.innerHTML = '';
+
+            if (db.length === 0) {
+                adminSeries.innerHTML = '<option value="">Сначала создайте сериал</option>';
+                adminEpSeries.innerHTML = '<option value="">Нет сериалов</option>';
+                return;
+            }
 
             db.forEach((series, index) => {
                 adminSeries.appendChild(new Option(series.name, index));
@@ -373,14 +382,13 @@
             const adminEpSeason = document.getElementById('adminEpSeasonSelect');
             adminEpSeason.innerHTML = '';
 
-            if (sIndex === '' || !db[sIndex]) return;
+            if (sIndex === '' || !db[sIndex] || !db[sIndex].seasons) return;
 
             db[sIndex].seasons.forEach((season, index) => {
                 adminEpSeason.appendChild(new Option(season.name, index));
             });
         }
 
-        // Добавление данных
         function addSeries() {
             const name = document.getElementById('newSeriesName').value.trim();
             if (!name) return alert('Введите название сериала');
@@ -394,7 +402,7 @@
         function addSeason() {
             const sIndex = document.getElementById('adminSeriesSelect').value;
             const name = document.getElementById('newSeasonName').value.trim();
-            if (sIndex === '' || !name) return alert('Заполните все поля');
+            if (sIndex === '' || !name) return alert('Выберите сериал и введите название сезона');
             db[sIndex].seasons.push({ name: name, episodes: [] });
             document.getElementById('newSeasonName').value = '';
             saveData();
