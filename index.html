@@ -2,293 +2,424 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Карта Освобождения (DeepState Style)</title>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кино-Вселенная (YouTube Player)</title>
     <style>
-        html, body {
+        :root {
+            --bg-color: #0d0d0d;
+            --panel-bg: #161616;
+            --accent: #ffcc00;
+            --accent-hover: #e6b800;
+            --text: #e0e0e0;
+            --border: #333;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            font-family: 'Courier New', Courier, monospace;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        h1 {
+            color: var(--accent);
             margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-            background-color: #1a1a1a;
+            text-transform: uppercase;
+            font-size: 1.5rem;
         }
-
-        #map {
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            /* Отключаем стандартный курсор текста */
-            cursor: crosshair; 
-        }
-
-        .menu-box {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(30, 30, 30, 0.9);
-            color: #fff;
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            z-index: 1000;
-            min-width: 150px;
-        }
-
-        .menu-title {
-            font-size: 13px;
-            color: #aaa;
-            margin-bottom: 10px;
-            font-weight: bold;
-            text-align: center;
-        }
-
         .btn {
+            background-color: var(--accent);
+            color: var(--bg-color);
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            text-transform: uppercase;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background-color: var(--accent-hover);
+        }
+        .section {
+            background: var(--panel-bg);
+            border-left: 4px solid var(--accent);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        label {
             display: block;
+            margin-bottom: 5px;
+            color: var(--accent);
+            font-size: 0.9rem;
+        }
+        select, input {
             width: 100%;
             padding: 10px;
-            margin-bottom: 8px;
-            background: #333;
-            color: #fff;
-            border: 1px solid #555;
-            border-radius: 5px;
-            text-align: left;
-            font-size: 14px;
-            cursor: pointer;
+            background: #0d0d0d;
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: 'Courier New', Courier, monospace;
             box-sizing: border-box;
-            transition: 0.2s;
         }
-
-        .btn.active {
-            background: #4a5568;
+        .player-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* Соотношение сторон 16:9 */
+            background: #000;
+            border: 1px solid var(--border);
+            margin-top: 15px;
         }
-
-        .btn-green {
-            border-left: 5px solid #22c55e;
-        }
-        .btn-green.active {
-            border-color: #4ade80;
-            background: rgba(34, 197, 94, 0.2);
-        }
-
-        .btn-red {
-            border-left: 5px solid #ef4444;
-        }
-        .btn-red.active {
-            border-color: #f87171;
-            background: rgba(239, 68, 68, 0.2);
-        }
-
-        .bottom-hint {
+        .player-container iframe {
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: #ccc;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 13px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        /* Модальное окно админки */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            justify-content: center;
+            align-items: center;
             z-index: 1000;
-            pointer-events: none;
+        }
+        .modal-content {
+            background: var(--panel-bg);
+            border: 2px solid var(--accent);
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            box-sizing: border-box;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px; right: 15px;
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .admin-form-group {
+            margin-bottom: 15px;
+        }
+        .admin-section-title {
+            color: var(--accent);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .empty-notice {
             text-align: center;
-            white-space: nowrap;
+            color: #777;
+            padding: 40px;
         }
     </style>
 </head>
 <body>
 
-    <div class="menu-box">
-        <div class="menu-title">МЕНЮ</div>
-        <button class="btn btn-green active" id="btnLiberate" onclick="setMode('liberate')">Освобождение 🇺🇦</button>
-        <button class="btn btn-red" id="btnOccupy" onclick="setMode('occupy')">Оккупация 🏴‍☠️</button>
-        <button class="btn" style="text-align: center; margin-top: 15px;" onclick="clearLayers()">Отменить всё</button>
+    <header>
+        <h1>Кино-Вселенная</h1>
+        <button class="btn" onclick="openAdminPanel()">Админ-панель</button>
+    </header>
+
+    <!-- Основной блок просмотра -->
+    <main>
+        <div class="section">
+            <div class="controls-grid">
+                <div>
+                    <label for="seriesSelect">Сериал:</label>
+                    <select id="seriesSelect" onchange="updateSeasons()"></select>
+                </div>
+                <div>
+                    <label for="seasonSelect">Сезон:</label>
+                    <select id="seasonSelect" onchange="updateEpisodes()"></select>
+                </div>
+                <div>
+                    <label for="episodeSelect">Серия:</label>
+                    <select id="episodeSelect" onchange="playEpisode()"></select>
+                </div>
+            </div>
+
+            <div id="playerWrapper">
+                <div class="empty-notice" id="emptyNotice">Нет доступных видео. Добавьте сериал через админ-панель.</div>
+                <div class="player-container" id="playerBox" style="display: none;">
+                    <div id="videoSlot"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Модальное окно админ-панели -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeAdminPanel()">&times;</button>
+            <h2>Админ-панель</h2>
+            
+            <!-- Форма авторизации -->
+            <div id="authBox">
+                <div class="admin-form-group">
+                    <label>Введите пароль:</label>
+                    <input type="password" id="adminPassword" placeholder="Пароль...">
+                </div>
+                <button class="btn" onclick="checkPassword()">Войти</button>
+            </div>
+
+            <!-- Интерфейс управления (скрыт до ввода пароля) -->
+            <div id="adminPanelContent" style="display: none;">
+                
+                <div class="admin-section-title">1. Добавить новый сериал</div>
+                <div class="admin-form-group">
+                    <input type="text" id="newSeriesName" placeholder="Название сериала...">
+                </div>
+                <button class="btn" onclick="addSeries()">Создать сериал</button>
+
+                <div class="admin-section-title">2. Добавить сезон</div>
+                <div class="admin-form-group">
+                    <label>Выберите сериал:</label>
+                    <select id="adminSeriesSelect"></select>
+                </div>
+                <div class="admin-form-group">
+                    <input type="text" id="newSeasonName" placeholder="Название сезона (например: Сезон 1)...">
+                </div>
+                <button class="btn" onclick="addSeason()">Добавить сезон</button>
+
+                <div class="admin-section-title">3. Добавить серию</div>
+                <div class="admin-form-group">
+                    <label>Выберите сериал:</label>
+                    <select id="adminEpSeriesSelect" onchange="updateAdminSeasons()"></select>
+                </div>
+                <div class="admin-form-group">
+                    <label>Выберите сезон:</label>
+                    <select id="adminEpSeasonSelect"></select>
+                </div>
+                <div class="admin-form-group">
+                    <input type="text" id="newEpName" placeholder="Название серии (например: Серия 1)...">
+                </div>
+                <div class="admin-form-group">
+                    <input type="text" id="newEpUrl" placeholder="Ссылка с YouTube (например: https://youtu.be/...)">
+                </div>
+                <button class="btn" onclick="addEpisode()">Добавить серию</button>
+            </div>
+        </div>
     </div>
 
-    <div class="bottom-hint">ЛКМ / 1 палец — рисовать &nbsp;|&nbsp; ПКМ / 2 пальца — двигать карту</div>
-
-    <div id="map"></div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <script>
-        // Отключаем стандартное перетаскивание Leaflet, чтобы сделать свое (ЛКМ - рисовать, ПКМ - двигать)
-        const map = L.map('map', {
-            zoomControl: true,
-            dragging: false,      // Отключаем стандартный драг
-            touchZoom: true,      // Оставляем зум щипком
-            doubleClickZoom: false
-        }).setView([48.3794, 31.1656], 6); // Центр Украины
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 18,
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
-
-        // Реальная зона оккупации (приблизительные координаты фронта и Крыма)
-        const realOccupiedZone = [
-            [46.5, 31.5], [46.6, 32.6], [47.0, 33.5], [47.4, 35.5], 
-            [47.8, 37.2], [48.0, 37.7], [48.6, 37.9], [48.8, 38.2], 
-            [49.0, 38.1], [49.6, 37.8], [49.9, 38.0], [50.2, 38.2], 
-            [49.8, 39.8], [48.2, 39.9], [47.1, 38.3], [46.7, 36.8], 
-            [45.3, 36.4], [44.4, 34.0], [45.4, 32.5], [46.1, 32.3]
+        // Данные по умолчанию или из памяти браузера
+        let db = JSON.parse(localStorage.getItem('kino_db_yt')) || [
+            {
+                name: "Стройка (Пример)",
+                seasons: [
+                    {
+                        name: "Сезон 1",
+                        episodes: [
+                            { name: "Эпизод 1", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }
+                        ]
+                    }
+                ]
+            }
         ];
-        
-        L.polygon(realOccupiedZone, {
-            color: '#ef4444',
-            fillColor: '#ef4444',
-            fillOpacity: 0.35,
-            weight: 1,
-            interactive: false
-        }).addTo(map);
 
-        let currentMode = 'liberate';
-        let isDrawing = false;
-        let drawnPoints = [];
-        let tempPolyline = null;
-        let mapContainer = document.getElementById('map');
-
-        // Цвета
-        const COLOR_LIBERATE = '#22c55e'; // Зеленый
-        const COLOR_OCCUPY = '#ef4444';   // Красный
-
-        function setMode(mode) {
-            currentMode = mode;
-            document.getElementById('btnLiberate').classList.toggle('active', mode === 'liberate');
-            document.getElementById('btnOccupy').classList.toggle('active', mode === 'occupy');
+        function saveData() {
+            localStorage.setItem('kino_db_yt', JSON.stringify(db));
+            initSelectors();
         }
 
-        function getLatLng(x, y) {
-            const rect = mapContainer.getBoundingClientRect();
-            return map.containerPointToLatLng(L.point(x - rect.left, y - rect.top));
+        function initSelectors() {
+            const sSelect = document.getElementById('seriesSelect');
+            sSelect.innerHTML = '';
+
+            if (db.length === 0) {
+                document.getElementById('emptyNotice').style.display = 'block';
+                document.getElementById('playerBox').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('emptyNotice').style.display = 'none';
+            document.getElementById('playerBox').style.display = 'block';
+
+            db.forEach((series, sIndex) => {
+                let opt = document.createElement('option');
+                opt.value = sIndex;
+                opt.textContent = series.name;
+                sSelect.appendChild(opt);
+            });
+            updateSeasons();
         }
 
-        // --- ЛОГИКА РИСОВАНИЯ ---
-        function startDraw(x, y) {
-            isDrawing = true;
-            drawnPoints = [getLatLng(x, y)];
-            tempPolyline = L.polyline(drawnPoints, {
-                color: currentMode === 'liberate' ? COLOR_LIBERATE : COLOR_OCCUPY,
-                dashArray: '5, 8',
-                weight: 3
-            }).addTo(map);
+        function updateSeasons() {
+            const sIndex = document.getElementById('seriesSelect').value;
+            const seaSelect = document.getElementById('seasonSelect');
+            seaSelect.innerHTML = '';
+
+            if (sIndex === '' || !db[sIndex] || !db[sIndex].seasons) return;
+
+            db[sIndex].seasons.forEach((season, seaIndex) => {
+                let opt = document.createElement('option');
+                opt.value = seaIndex;
+                opt.textContent = season.name;
+                seaSelect.appendChild(opt);
+            });
+            updateEpisodes();
         }
 
-        function moveDraw(x, y) {
-            if (!isDrawing) return;
-            drawnPoints.push(getLatLng(x, y));
-            tempPolyline.setLatLngs(drawnPoints);
+        function updateEpisodes() {
+            const sIndex = document.getElementById('seriesSelect').value;
+            const seaIndex = document.getElementById('seasonSelect').value;
+            const epSelect = document.getElementById('episodeSelect');
+            epSelect.innerHTML = '';
+
+            if (sIndex === '' || seaIndex === '' || !db[sIndex].seasons[seaIndex]) return;
+
+            db[sIndex].seasons[seaIndex].episodes.forEach((ep, epIndex) => {
+                let opt = document.createElement('option');
+                opt.value = epIndex;
+                opt.textContent = ep.name;
+                epSelect.appendChild(opt);
+            });
+            playEpisode();
         }
 
-        function stopDraw() {
-            if (!isDrawing) return;
-            isDrawing = false;
+        // Автоконвертация ссылки YouTube в iframe и запуск
+        function playEpisode() {
+            const sIndex = document.getElementById('seriesSelect').value;
+            const seaIndex = document.getElementById('seasonSelect').value;
+            const epIndex = document.getElementById('episodeSelect').value;
+            const videoSlot = document.getElementById('videoSlot');
 
-            if (tempPolyline) map.removeLayer(tempPolyline);
+            if (sIndex === '' || seaIndex === '' || epIndex === '') return;
 
-            if (drawnPoints.length > 5) {
-                const color = currentMode === 'liberate' ? COLOR_LIBERATE : COLOR_OCCUPY;
-                L.polygon(drawnPoints, {
-                    color: color,
-                    fillColor: color,
-                    fillOpacity: 0.5,
-                    weight: 2
-                }).addTo(map);
+            let ep = db[sIndex].seasons[seaIndex].episodes[epIndex];
+            if (!ep) return;
+
+            let url = ep.url.trim();
+            let embedUrl = "";
+
+            if (url.includes('watch?v=')) {
+                let videoId = url.split('watch?v=')[1].split('&')[0];
+                embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            } else if (url.includes('youtu.be/')) {
+                let videoId = url.split('youtu.be/')[1].split('?')[0];
+                embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            } else {
+                embedUrl = url; // Если вдруг вставлена прямая embed ссылка
             }
-            drawnPoints = [];
+
+            videoSlot.innerHTML = `<iframe src="${embedUrl}" allowfullscreen></iframe>`;
         }
 
-        // --- УПРАВЛЕНИЕ МЫШЬЮ (ПК) ---
-        let isRightMouseDown = false;
-        let lastMousePos = null;
+        // Управление админ-панелью
+        function openAdminPanel() {
+            document.getElementById('adminModal').style.display = 'flex';
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('authBox').style.display = 'block';
+            document.getElementById('adminPanelContent').style.display = 'none';
+        }
 
-        // Отключаем контекстное меню при ПКМ
-        mapContainer.addEventListener('contextmenu', e => e.preventDefault());
+        function closeAdminPanel() {
+            document.getElementById('adminModal').style.display = 'none';
+        }
 
-        mapContainer.addEventListener('mousedown', function(e) {
-            if (e.button === 2) { 
-                // Правая кнопка мыши - Двигать карту
-                isRightMouseDown = true;
-                lastMousePos = { x: e.clientX, y: e.clientY };
-            } else if (e.button === 0) { 
-                // Левая кнопка мыши - Рисовать
-                startDraw(e.clientX, e.clientY);
+        function checkPassword() {
+            const pass = document.getElementById('adminPassword').value;
+            if (pass === '12345678') {
+                document.getElementById('authBox').style.display = 'none';
+                document.getElementById('adminPanelContent').style.display = 'block';
+                initAdminSelectors();
+            } else {
+                alert('Неверный пароль! (Подсказка: 12345678)');
             }
-        });
+        }
 
-        window.addEventListener('mousemove', function(e) {
-            if (isRightMouseDown) {
-                // Перемещение карты
-                const dx = e.clientX - lastMousePos.x;
-                const dy = e.clientY - lastMousePos.y;
-                map.panBy([-dx, -dy], { animate: false });
-                lastMousePos = { x: e.clientX, y: e.clientY };
-            } else if (isDrawing) {
-                moveDraw(e.clientX, e.clientY);
-            }
-        });
+        function initAdminSelectors() {
+            const adminSeries = document.getElementById('adminSeriesSelect');
+            const adminEpSeries = document.getElementById('adminEpSeriesSelect');
+            adminSeries.innerHTML = '';
+            adminEpSeries.innerHTML = '';
 
-        window.addEventListener('mouseup', function(e) {
-            if (e.button === 2) isRightMouseDown = false;
-            if (e.button === 0) stopDraw();
-        });
+            db.forEach((series, index) => {
+                adminSeries.appendChild(new Option(series.name, index));
+                adminEpSeries.appendChild(new Option(series.name, index));
+            });
+            updateAdminSeasons();
+        }
 
-        // --- УПРАВЛЕНИЕ СЕНСОРОМ (ТЕЛЕФОН) ---
-        let isTwoFingerPan = false;
-        let lastTouchPos = null;
+        function updateAdminSeasons() {
+            const sIndex = document.getElementById('adminEpSeriesSelect').value;
+            const adminEpSeason = document.getElementById('adminEpSeasonSelect');
+            adminEpSeason.innerHTML = '';
 
-        mapContainer.addEventListener('touchstart', function(e) {
-            if (e.touches.length === 2) {
-                // 2 пальца - Двигать карту
-                isTwoFingerPan = true;
-                if (isDrawing) stopDraw(); // Прерываем рисование, если начали двигать
-                
-                lastTouchPos = {
-                    x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
-                    y: (e.touches[0].clientY + e.touches[1].clientY) / 2
-                };
-            } else if (e.touches.length === 1 && !isTwoFingerPan) {
-                // 1 палец - Рисовать
-                e.preventDefault(); // Блокируем стандартный скролл экрана
-                startDraw(e.touches[0].clientX, e.touches[0].clientY);
-            }
-        }, { passive: false });
+            if (sIndex === '' || !db[sIndex]) return;
 
-        mapContainer.addEventListener('touchmove', function(e) {
-            if (e.touches.length === 2 && isTwoFingerPan) {
-                e.preventDefault();
-                const currentX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                const currentY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-                
-                const dx = currentX - lastTouchPos.x;
-                const dy = currentY - lastTouchPos.y;
-                
-                map.panBy([-dx, -dy], { animate: false });
-                lastTouchPos = { x: currentX, y: currentY };
-            } else if (e.touches.length === 1 && isDrawing) {
-                e.preventDefault();
-                moveDraw(e.touches[0].clientX, e.touches[0].clientY);
-            }
-        }, { passive: false });
-
-        window.addEventListener('touchend', function(e) {
-            if (e.touches.length < 2) isTwoFingerPan = false;
-            if (e.touches.length === 0) stopDraw();
-        });
-
-        // --- ОЧИСТКА ---
-        function clearLayers() {
-            map.eachLayer((layer) => {
-                // Удаляем только нарисованные полигоны (оставляем базовую карту и основную зону оккупации)
-                if (layer instanceof L.Polygon && layer.options.interactive !== false) {
-                    map.removeLayer(layer);
-                }
+            db[sIndex].seasons.forEach((season, index) => {
+                adminEpSeason.appendChild(new Option(season.name, index));
             });
         }
+
+        // Добавление данных
+        function addSeries() {
+            const name = document.getElementById('newSeriesName').value.trim();
+            if (!name) return alert('Введите название сериала');
+            db.push({ name: name, seasons: [] });
+            document.getElementById('newSeriesName').value = '';
+            saveData();
+            initAdminSelectors();
+            alert('Сериал успешно создан!');
+        }
+
+        function addSeason() {
+            const sIndex = document.getElementById('adminSeriesSelect').value;
+            const name = document.getElementById('newSeasonName').value.trim();
+            if (sIndex === '' || !name) return alert('Заполните все поля');
+            db[sIndex].seasons.push({ name: name, episodes: [] });
+            document.getElementById('newSeasonName').value = '';
+            saveData();
+            initAdminSelectors();
+            alert('Сезон успешно добавлен!');
+        }
+
+        function addEpisode() {
+            const sIndex = document.getElementById('adminEpSeriesSelect').value;
+            const seaIndex = document.getElementById('adminEpSeasonSelect').value;
+            const name = document.getElementById('newEpName').value.trim();
+            const url = document.getElementById('newEpUrl').value.trim();
+
+            if (sIndex === '' || seaIndex === '' || !name || !url) return alert('Заполните все поля серии');
+            
+            db[sIndex].seasons[seaIndex].episodes.push({ name: name, url: url });
+            document.getElementById('newEpName').value = '';
+            document.getElementById('newEpUrl').value = '';
+            saveData();
+            alert('Серия успешно добавлена!');
+        }
+
+        window.onload = function() {
+            initSelectors();
+        };
     </script>
 </body>
 </html>
