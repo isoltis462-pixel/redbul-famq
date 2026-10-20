@@ -103,9 +103,10 @@
             justify-content: center;
             align-items: center;
         }
-        .player-container video {
+        .player-container video, .player-container iframe {
             width: 100%;
             max-height: 70vh;
+            min-height: 400px;
             border: none;
         }
         .modal {
@@ -152,7 +153,7 @@
             color: #777;
             padding: 40px;
         }
-        #uploadStatus {
+        #uploadProgress {
             margin-top: 10px;
             color: var(--accent);
             font-weight: bold;
@@ -184,7 +185,7 @@
             </div>
 
             <div id="playerWrapper">
-                <div class="empty-notice" id="emptyNotice">Немає доступного контенту. Скористайтеся жовтим квадратом у верхньому кутку (пароль: 12345678)!</div>
+                <div class="empty-notice" id="emptyNotice">Контенту немає. Натисніть жовтий квадрат для додавання!</div>
                 <div class="player-container" id="playerBox" style="display: none;">
                     <div id="videoSlot" style="width: 100%;"></div>
                 </div>
@@ -219,11 +220,11 @@
                     <select id="adminSeriesSelect"></select>
                 </div>
                 <div class="admin-form-group">
-                    <input type="text" id="newSeasonName" placeholder="Назва сезону (напр: Сезон 1)...">
+                    <input type="text" id="newSeasonName" placeholder="Назва сезону...">
                 </div>
                 <button class="btn" onclick="addSeason()">Додати сезон</button>
 
-                <div class="admin-section-title">3. Додати серію з галереї</div>
+                <div class="admin-section-title">3. Опублікувати відео у Cloudinary</div>
                 <div class="admin-form-group">
                     <label>Виберіть серіал:</label>
                     <select id="adminEpSeriesSelect" onchange="updateAdminSeasons()"></select>
@@ -233,42 +234,26 @@
                     <select id="adminEpSeasonSelect"></select>
                 </div>
                 <div class="admin-form-group">
-                    <input type="text" id="newEpName" placeholder="Назва серії (напр: Серія 1)...">
+                    <input type="text" id="newEpName" placeholder="Назва серії...">
                 </div>
                 <div class="admin-form-group">
-                    <label>Виберіть відеофайл з пристрою:</label>
+                    <label>Виберіть відеофайл з галереї/комп'ютера:</label>
                     <input type="file" id="newEpFile" accept="video/*">
                 </div>
-                <button class="btn" onclick="addEpisode()">Завантажити і додати</button>
-                <div id="uploadStatus"></div>
+                <button class="btn" id="uploadBtn" onclick="uploadToCloudinary()">Завантажити в Cloudinary</button>
+                <div id="uploadProgress"></div>
             </div>
         </div>
     </div>
 
     <script>
-        let db = [];
-        let idb = null;
+        const CLOUD_NAME = "hvlowzwo";
+        const UPLOAD_PRESET = "ml_default"; // Запонюєтья з кроку 1
 
-        // Ініціалізація баз даних IndexedDB для збереження великих файлів
-        const request = indexedDB.open("BuildingVideoDB", 1);
-        request.onupgradeneeded = function(e) {
-            idb = e.target.result;
-            if (!idb.objectStoreNames.contains("videos")) {
-                idb.createObjectStore("videos", { keyPath: "id" });
-            }
-        };
-        request.onsuccess = function(e) {
-            idb = e.target.result;
-            loadStructure();
-        };
+        let db = JSON.parse(localStorage.getItem('building_cloudinary_db')) || [];
 
-        function saveStructure() {
-            localStorage.setItem('building_structure_db', JSON.stringify(db));
-            initSelectors();
-        }
-
-        function loadStructure() {
-            db = JSON.parse(localStorage.getItem('building_structure_db')) || [];
+        function saveData() {
+            localStorage.setItem('building_cloudinary_db', JSON.stringify(db));
             initSelectors();
         }
 
@@ -332,19 +317,7 @@
             let ep = db[sIndex].seasons[seaIndex].episodes[epIndex];
             if (!ep) return;
 
-            // Зчитуємо відео з IndexedDB
-            const tx = idb.transaction("videos", "readonly");
-            const store = tx.objectStore("videos");
-            const getReq = store.get(ep.videoId);
-
-            getReq.onsuccess = function() {
-                if (getReq.result) {
-                    const videoUrl = URL.createObjectURL(getReq.result.file);
-                    videoSlot.innerHTML = `<video src="${videoUrl}" controls autoplay style="width:100%; max-height:70vh; border-radius:4px;"></video>`;
-                } else {
-                    videoSlot.innerHTML = '<p style="color:red; text-align:center;">Файл відео не знайдено!</p>';
-                }
-            };
+            videoSlot.innerHTML = `<video src="${ep.url}" controls autoplay style="width:100%; max-height:70vh; border-radius:4px;"></video>`;
         }
 
         function openAdminPanel() {
@@ -352,7 +325,7 @@
             document.getElementById('adminPassword').value = '';
             document.getElementById('authBox').style.display = 'block';
             document.getElementById('adminPanelContent').style.display = 'none';
-            document.getElementById('uploadStatus').innerText = '';
+            document.getElementById('uploadProgress').innerText = '';
         }
 
         function closeAdminPanel() {
@@ -405,7 +378,7 @@
             if (!name) return alert('Введіть назву серіалу');
             db.push({ name: name, seasons: [] });
             document.getElementById('newSeriesName').value = '';
-            saveStructure();
+            saveData();
             initAdminSelectors();
             alert('Серіал створено!');
         }
@@ -416,49 +389,62 @@
             if (sIndex === '' || !name) return alert('Заповніть поля');
             db[sIndex].seasons.push({ name: name, episodes: [] });
             document.getElementById('newSeasonName').value = '';
-            saveStructure();
+            saveData();
             initAdminSelectors();
             alert('Сезон додано!');
         }
 
-        function addEpisode() {
+        function uploadToCloudinary() {
             const sIndex = document.getElementById('adminEpSeriesSelect').value;
             const seaIndex = document.getElementById('adminEpSeasonSelect').value;
             const name = document.getElementById('newEpName').value.trim();
             const fileInput = document.getElementById('newEpFile');
-            const status = document.getElementById('uploadStatus');
+            const progress = document.getElementById('uploadProgress');
+            const btn = document.getElementById('uploadBtn');
 
             if (sIndex === '' || seaIndex === '' || !name) return alert('Введіть назву серії');
             if (fileInput.files.length === 0) return alert('Виберіть відеофайл');
 
             const file = fileInput.files[0];
-            const videoId = 'video_' + Date.now();
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
 
-            status.innerText = "Збереження відео... Будь ласка, зачекайте.";
+            progress.innerText = "Завантаження у хмару Cloudinary... Зачекайте!";
+            btn.disabled = true;
 
-            // Зберігаємо файл у IndexedDB
-            const tx = idb.transaction("videos", "readwrite");
-            const store = tx.objectStore("videos");
-            store.put({ id: videoId, file: file });
-
-            tx.oncomplete = function() {
-                db[sIndex].seasons[seaIndex].episodes.push({
-                    name: name,
-                    videoId: videoId
-                });
-                saveStructure();
-                status.innerText = "";
-                document.getElementById('newEpName').value = '';
-                fileInput.value = '';
-                alert('Серію успішно завантажено та додано на сайт!');
-                closeAdminPanel();
-            };
-
-            tx.onerror = function() {
-                status.innerText = "";
-                alert('Помилка при збереженні відео у пам\'ять браузера!');
-            };
+            fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                if (data.secure_url) {
+                    db[sIndex].seasons[seaIndex].episodes.push({
+                        name: name,
+                        url: data.secure_url
+                    });
+                    saveData();
+                    progress.innerText = "";
+                    document.getElementById('newEpName').value = '';
+                    fileInput.value = '';
+                    alert('Відео успішно завантажено в хмару та додано на сайт для всіх!');
+                    closeAdminPanel();
+                } else {
+                    alert('Помилка завантаження! Перевірте Upload Preset у Cloudinary.');
+                    progress.innerText = "";
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                progress.innerText = "";
+                alert('Сталася помилка з\'єднання.');
+                console.error(err);
+            });
         }
+
+        window.onload = initSelectors;
     </script>
 </body>
 </html>
