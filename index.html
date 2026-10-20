@@ -108,7 +108,6 @@
             max-height: 70vh;
             border: none;
         }
-        /* Модальне вікно адмінки */
         .modal {
             display: none;
             position: fixed;
@@ -153,6 +152,11 @@
             color: #777;
             padding: 40px;
         }
+        #uploadStatus {
+            margin-top: 10px;
+            color: var(--accent);
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -180,7 +184,7 @@
             </div>
 
             <div id="playerWrapper">
-                <div class="empty-notice" id="emptyNotice">Немає доступного контенту. Натисніть на жовтий квадрат у правому верхньому кутку (пароль: 12345678), щоб додати відео з галереї!</div>
+                <div class="empty-notice" id="emptyNotice">Немає доступного контенту. Скористайтеся жовтим квадратом у верхньому кутку (пароль: 12345678)!</div>
                 <div class="player-container" id="playerBox" style="display: none;">
                     <div id="videoSlot" style="width: 100%;"></div>
                 </div>
@@ -215,7 +219,7 @@
                     <select id="adminSeriesSelect"></select>
                 </div>
                 <div class="admin-form-group">
-                    <input type="text" id="newSeasonName" placeholder="Назва сезону (напр: Сезон 2)...">
+                    <input type="text" id="newSeasonName" placeholder="Назва сезону (напр: Сезон 1)...">
                 </div>
                 <button class="btn" onclick="addSeason()">Додати сезон</button>
 
@@ -236,15 +240,35 @@
                     <input type="file" id="newEpFile" accept="video/*">
                 </div>
                 <button class="btn" onclick="addEpisode()">Завантажити і додати</button>
+                <div id="uploadStatus"></div>
             </div>
         </div>
     </div>
 
     <script>
-        let db = JSON.parse(localStorage.getItem('building_gallery_db')) || [];
+        let db = [];
+        let idb = null;
 
-        function saveData() {
-            localStorage.setItem('building_gallery_db', JSON.stringify(db));
+        // Ініціалізація баз даних IndexedDB для збереження великих файлів
+        const request = indexedDB.open("BuildingVideoDB", 1);
+        request.onupgradeneeded = function(e) {
+            idb = e.target.result;
+            if (!idb.objectStoreNames.contains("videos")) {
+                idb.createObjectStore("videos", { keyPath: "id" });
+            }
+        };
+        request.onsuccess = function(e) {
+            idb = e.target.result;
+            loadStructure();
+        };
+
+        function saveStructure() {
+            localStorage.setItem('building_structure_db', JSON.stringify(db));
+            initSelectors();
+        }
+
+        function loadStructure() {
+            db = JSON.parse(localStorage.getItem('building_structure_db')) || [];
             initSelectors();
         }
 
@@ -262,10 +286,7 @@
             document.getElementById('playerBox').style.display = 'block';
 
             db.forEach((series, sIndex) => {
-                let opt = document.createElement('option');
-                opt.value = sIndex;
-                opt.textContent = series.name;
-                sSelect.appendChild(opt);
+                sSelect.appendChild(new Option(series.name, sIndex));
             });
             updateSeasons();
         }
@@ -278,10 +299,7 @@
             if (sIndex === '' || !db[sIndex] || !db[sIndex].seasons) return;
 
             db[sIndex].seasons.forEach((season, seaIndex) => {
-                let opt = document.createElement('option');
-                opt.value = seaIndex;
-                opt.textContent = season.name;
-                seaSelect.appendChild(opt);
+                seaSelect.appendChild(new Option(season.name, seaIndex));
             });
             updateEpisodes();
         }
@@ -295,10 +313,7 @@
             if (sIndex === '' || seaIndex === '' || !db[sIndex].seasons[seaIndex]) return;
 
             db[sIndex].seasons[seaIndex].episodes.forEach((ep, epIndex) => {
-                let opt = document.createElement('option');
-                opt.value = epIndex;
-                opt.textContent = ep.name;
-                epSelect.appendChild(opt);
+                epSelect.appendChild(new Option(ep.name, epIndex));
             });
             playEpisode();
         }
@@ -317,7 +332,19 @@
             let ep = db[sIndex].seasons[seaIndex].episodes[epIndex];
             if (!ep) return;
 
-            videoSlot.innerHTML = `<video src="${ep.videoData}" controls autoplay style="width:100%; max-height:70vh; border-radius:4px;"></video>`;
+            // Зчитуємо відео з IndexedDB
+            const tx = idb.transaction("videos", "readonly");
+            const store = tx.objectStore("videos");
+            const getReq = store.get(ep.videoId);
+
+            getReq.onsuccess = function() {
+                if (getReq.result) {
+                    const videoUrl = URL.createObjectURL(getReq.result.file);
+                    videoSlot.innerHTML = `<video src="${videoUrl}" controls autoplay style="width:100%; max-height:70vh; border-radius:4px;"></video>`;
+                } else {
+                    videoSlot.innerHTML = '<p style="color:red; text-align:center;">Файл відео не знайдено!</p>';
+                }
+            };
         }
 
         function openAdminPanel() {
@@ -325,6 +352,7 @@
             document.getElementById('adminPassword').value = '';
             document.getElementById('authBox').style.display = 'block';
             document.getElementById('adminPanelContent').style.display = 'none';
+            document.getElementById('uploadStatus').innerText = '';
         }
 
         function closeAdminPanel() {
@@ -377,7 +405,7 @@
             if (!name) return alert('Введіть назву серіалу');
             db.push({ name: name, seasons: [] });
             document.getElementById('newSeriesName').value = '';
-            saveData();
+            saveStructure();
             initAdminSelectors();
             alert('Серіал створено!');
         }
@@ -388,7 +416,7 @@
             if (sIndex === '' || !name) return alert('Заповніть поля');
             db[sIndex].seasons.push({ name: name, episodes: [] });
             document.getElementById('newSeasonName').value = '';
-            saveData();
+            saveStructure();
             initAdminSelectors();
             alert('Сезон додано!');
         }
@@ -398,31 +426,39 @@
             const seaIndex = document.getElementById('adminEpSeasonSelect').value;
             const name = document.getElementById('newEpName').value.trim();
             const fileInput = document.getElementById('newEpFile');
+            const status = document.getElementById('uploadStatus');
 
             if (sIndex === '' || seaIndex === '' || !name) return alert('Введіть назву серії');
-            if (fileInput.files.length === 0) return alert('Виберіть відеофайл з галереї');
+            if (fileInput.files.length === 0) return alert('Виберіть відеофайл');
 
             const file = fileInput.files[0];
-            const reader = new FileReader();
+            const videoId = 'video_' + Date.now();
 
-            reader.onload = function(e) {
-                db[sIndex].seasons[seaIndex].episodes.push({ 
-                    name: name, 
-                    videoData: e.target.result 
+            status.innerText = "Збереження відео... Будь ласка, зачекайте.";
+
+            // Зберігаємо файл у IndexedDB
+            const tx = idb.transaction("videos", "readwrite");
+            const store = tx.objectStore("videos");
+            store.put({ id: videoId, file: file });
+
+            tx.oncomplete = function() {
+                db[sIndex].seasons[seaIndex].episodes.push({
+                    name: name,
+                    videoId: videoId
                 });
+                saveStructure();
+                status.innerText = "";
                 document.getElementById('newEpName').value = '';
                 fileInput.value = '';
-                saveData();
-                alert('Серію успішно завантажено та опубліковано на сайті!');
+                alert('Серію успішно завантажено та додано на сайт!');
                 closeAdminPanel();
             };
 
-            reader.readAsDataURL(file);
+            tx.onerror = function() {
+                status.innerText = "";
+                alert('Помилка при збереженні відео у пам\'ять браузера!');
+            };
         }
-
-        window.onload = function() {
-            initSelectors();
-        };
     </script>
 </body>
 </html>
