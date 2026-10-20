@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Будівництво (Кино-Вселенная)</title>
+    <title>Будівництво</title>
     <style>
         :root {
             --bg-color: #0d0d0d;
@@ -80,7 +80,7 @@
             color: var(--accent);
             font-size: 0.9rem;
         }
-        select, input, textarea {
+        select, input {
             width: 100%;
             padding: 10px;
             background: #0d0d0d;
@@ -89,36 +89,22 @@
             font-family: 'Courier New', Courier, monospace;
             box-sizing: border-box;
         }
-        textarea {
-            resize: vertical;
-            height: 100px;
-        }
         .player-container {
             position: relative;
             width: 100%;
-            padding-top: 56.25%; /* 16:9 */
             background: #000;
             border: 1px solid var(--border);
             margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .player-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .player-container iframe, .player-container video {
             width: 100%;
-            height: 100%;
+            max-height: 70vh;
             border: none;
         }
-        /* Блок для интерактивного кода/истории */
-        .interactive-container {
-            background: #0d0d0d;
-            border: 1px solid var(--border);
-            padding: 25px;
-            margin-top: 15px;
-            border-radius: 4px;
-            min-height: 250px;
-        }
-        /* Модальное окно админки */
+        /* Модальне вікно адмінки */
         .modal {
             display: none;
             position: fixed;
@@ -133,7 +119,7 @@
             border: 2px solid var(--accent);
             padding: 30px;
             width: 100%;
-            max-width: 550px;
+            max-width: 500px;
             box-sizing: border-box;
             position: relative;
             max-height: 90vh;
@@ -169,10 +155,9 @@
 
     <header>
         <h1>Будівництво</h1>
-        <button class="admin-square-btn" onclick="openAdminPanel()" title="Админ-панель"></button>
+        <button class="admin-square-btn" onclick="openAdminPanel()" title="Адмін-панель"></button>
     </header>
 
-    <!-- Основной блок просмотра -->
     <main>
         <div class="section">
             <div class="controls-grid">
@@ -191,28 +176,20 @@
             </div>
 
             <div id="playerWrapper">
-                <div class="empty-notice" id="emptyNotice">Немає доступного контенту. Натисніть на жовтий квадрат у правому верхньому кутку (пароль: 12345678), щоб додати серіал чи інтерактив!</div>
-                
-                <!-- Слот для YouTube видео -->
+                <div class="empty-notice" id="emptyNotice">Немає доступного контенту. Скористайтеся адмін-панеллю!</div>
                 <div class="player-container" id="playerBox" style="display: none;">
-                    <div id="videoSlot"></div>
-                </div>
-
-                <!-- Слот для интерактивного кода / текста / HTML -->
-                <div class="interactive-container" id="interactiveBox" style="display: none;">
-                    <div id="interactiveSlot"></div>
+                    <div id="videoSlot" style="width: 100%;"></div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Модальное окно админ-панели -->
+    <!-- Адмін-панель -->
     <div class="modal" id="adminModal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeAdminPanel()">&times;</button>
             <h2>Адмін-панель</h2>
             
-            <!-- Авторизация -->
             <div id="authBox">
                 <div class="admin-form-group">
                     <label>Введіть пароль:</label>
@@ -221,9 +198,7 @@
                 <button class="btn" onclick="checkPassword()">Увійти</button>
             </div>
 
-            <!-- Управление -->
             <div id="adminPanelContent" style="display: none;">
-                
                 <div class="admin-section-title">1. Створити серіал</div>
                 <div class="admin-form-group">
                     <input type="text" id="newSeriesName" placeholder="Назва серіалу...">
@@ -236,11 +211,11 @@
                     <select id="adminSeriesSelect"></select>
                 </div>
                 <div class="admin-form-group">
-                    <input type="text" id="newSeasonName" placeholder="Назва сезону (напр: Сезон 1)...">
+                    <input type="text" id="newSeasonName" placeholder="Назва сезону...">
                 </div>
                 <button class="btn" onclick="addSeason()">Додати сезон</button>
 
-                <div class="admin-section-title">3. Додати серію / інтерактив</div>
+                <div class="admin-section-title">3. Додати серію (Cloudinary або YouTube)</div>
                 <div class="admin-form-group">
                     <label>Виберіть серіал:</label>
                     <select id="adminEpSeriesSelect" onchange="updateAdminSeasons()"></select>
@@ -250,36 +225,21 @@
                     <select id="adminEpSeasonSelect"></select>
                 </div>
                 <div class="admin-form-group">
-                    <input type="text" id="newEpName" placeholder="Назва серії (напр: Серія 1)...">
+                    <input type="text" id="newEpName" placeholder="Назва серії...">
                 </div>
                 <div class="admin-form-group">
-                    <label>Тип контенту:</label>
-                    <select id="newEpType" onchange="toggleContentType()">
-                        <option value="youtube">YouTube Відео</option>
-                        <option value="interactive">Інтерактивний код / HTML / Текст</option>
-                    </select>
+                    <input type="text" id="newEpUrl" placeholder="Посилання на відео (Cloudinary .mp4 або YouTube)...">
                 </div>
-
-                <!-- Поле для YouTube -->
-                <div class="admin-form-group" id="youtubeInputGroup">
-                    <input type="text" id="newEpUrl" placeholder="Посилання з YouTube (напр: https://youtu.be/...)">
-                </div>
-
-                <!-- Поле для интерактивного кода -->
-                <div class="admin-form-group" id="interactiveInputGroup" style="display: none;">
-                    <textarea id="newEpContent" placeholder="Введіть HTML код, текст або інтерактивний скрипт для цієї серії..."></textarea>
-                </div>
-
-                <button class="btn" onclick="addEpisode()">Додати контент</button>
+                <button class="btn" onclick="addEpisode()">Додати серію</button>
             </div>
         </div>
     </div>
 
     <script>
-        let db = JSON.parse(localStorage.getItem('building_db')) || [];
+        let db = JSON.parse(localStorage.getItem('building_cloud_db')) || [];
 
         function saveData() {
-            localStorage.setItem('building_db', JSON.stringify(db));
+            localStorage.setItem('building_cloud_db', JSON.stringify(db));
             initSelectors();
         }
 
@@ -290,11 +250,11 @@
             if (db.length === 0) {
                 document.getElementById('emptyNotice').style.display = 'block';
                 document.getElementById('playerBox').style.display = 'none';
-                document.getElementById('interactiveBox').style.display = 'none';
                 return;
             }
 
             document.getElementById('emptyNotice').style.display = 'none';
+            document.getElementById('playerBox').style.display = 'block';
 
             db.forEach((series, sIndex) => {
                 let opt = document.createElement('option');
@@ -342,54 +302,26 @@
             const sIndex = document.getElementById('seriesSelect').value;
             const seaIndex = document.getElementById('seasonSelect').value;
             const epIndex = document.getElementById('episodeSelect').value;
-            
-            const playerBox = document.getElementById('playerBox');
-            const interactiveBox = document.getElementById('interactiveBox');
             const videoSlot = document.getElementById('videoSlot');
-            const interactiveSlot = document.getElementById('interactiveSlot');
 
             if (sIndex === '' || seaIndex === '' || epIndex === '') {
-                playerBox.style.display = 'none';
-                interactiveBox.style.display = 'none';
+                videoSlot.innerHTML = '';
                 return;
             }
 
             let ep = db[sIndex].seasons[seaIndex].episodes[epIndex];
             if (!ep) return;
 
-            if (ep.type === 'interactive') {
-                playerBox.style.display = 'none';
-                interactiveBox.style.display = 'block';
-                interactiveSlot.innerHTML = ep.content; // Відображаємо кастомний HTML/код/текст
+            let url = ep.url.trim();
+
+            // Перевіряємо, чи це прямий файлове відео з Cloudinary / MP4 чи YouTube
+            if (url.endsWith('.mp4') || url.includes('cloudinary.com')) {
+                videoSlot.innerHTML = `<video src="${url}" controls autoplay style="width:100%; max-height: 70vh; border-radius: 4px;"></video>`;
+            } else if (url.includes('watch?v=') || url.includes('youtu.be/')) {
+                let videoId = url.includes('watch?v=') ? url.split('watch?v=')[1].split('&')[0] : url.split('youtu.be/')[1].split('?')[0];
+                videoSlot.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" style="width:100%; height:450px;" allowfullscreen></iframe>`;
             } else {
-                interactiveBox.style.display = 'none';
-                playerBox.style.display = 'block';
-
-                let url = ep.url.trim();
-                let embedUrl = "";
-
-                if (url.includes('watch?v=')) {
-                    let videoId = url.split('watch?v=')[1].split('&')[0];
-                    embedUrl = `https://www.youtube.com/embed/${videoId}`;
-                } else if (url.includes('youtu.be/')) {
-                    let videoId = url.split('youtu.be/')[1].split('?')[0];
-                    embedUrl = `https://www.youtube.com/embed/${videoId}`;
-                } else {
-                    embedUrl = url;
-                }
-
-                videoSlot.innerHTML = `<iframe src="${embedUrl}" allowfullscreen></iframe>`;
-            }
-        }
-
-        function toggleContentType() {
-            const type = document.getElementById('newEpType').value;
-            if (type === 'interactive') {
-                document.getElementById('youtubeInputGroup').style.display = 'none';
-                document.getElementById('interactiveInputGroup').style.display = 'block';
-            } else {
-                document.getElementById('youtubeInputGroup').style.display = 'block';
-                document.getElementById('interactiveInputGroup').style.display = 'none';
+                videoSlot.innerHTML = `<video src="${url}" controls style="width:100%; max-height: 70vh;"></video>`;
             }
         }
 
@@ -405,8 +337,7 @@
         }
 
         function checkPassword() {
-            const pass = document.getElementById('adminPassword').value;
-            if (pass === '12345678') {
+            if (document.getElementById('adminPassword').value === '12345678') {
                 document.getElementById('authBox').style.display = 'none';
                 document.getElementById('adminPanelContent').style.display = 'block';
                 initAdminSelectors();
@@ -453,44 +384,33 @@
             document.getElementById('newSeriesName').value = '';
             saveData();
             initAdminSelectors();
-            alert('Серіал успішно створено!');
+            alert('Серіал створено!');
         }
 
         function addSeason() {
             const sIndex = document.getElementById('adminSeriesSelect').value;
             const name = document.getElementById('newSeasonName').value.trim();
-            if (sIndex === '' || !name) return alert('Виберіть серіал та введіть назву сезону');
+            if (sIndex === '' || !name) return alert('Заповніть поля');
             db[sIndex].seasons.push({ name: name, episodes: [] });
             document.getElementById('newSeasonName').value = '';
             saveData();
             initAdminSelectors();
-            alert('Сезон успішно додано!');
+            alert('Сезон додано!');
         }
 
         function addEpisode() {
             const sIndex = document.getElementById('adminEpSeriesSelect').value;
             const seaIndex = document.getElementById('adminEpSeasonSelect').value;
             const name = document.getElementById('newEpName').value.trim();
-            const type = document.getElementById('newEpType').value;
+            const url = document.getElementById('newEpUrl').value.trim();
 
-            if (sIndex === '' || seaIndex === '' || !name) return alert('Заповніть назву та виберіть сезон');
-
-            let episodeData = { name: name, type: type };
-
-            if (type === 'interactive') {
-                episodeData.content = document.getElementById('newEpContent').value.trim();
-                if (!episodeData.content) return alert('Введіть інтерактивний код або текст');
-            } else {
-                episodeData.url = document.getElementById('newEpUrl').value.trim();
-                if (!episodeData.url) return alert('Введіть посилання на YouTube');
-            }
+            if (sIndex === '' || seaIndex === '' || !name || !url) return alert('Заповніть всі поля');
             
-            db[sIndex].seasons[seaIndex].episodes.push(episodeData);
+            db[sIndex].seasons[seaIndex].episodes.push({ name: name, url: url });
             document.getElementById('newEpName').value = '';
             document.getElementById('newEpUrl').value = '';
-            document.getElementById('newEpContent').value = '';
             saveData();
-            alert('Контент успішно додано!');
+            alert('Серію успішно додано!');
         }
 
         window.onload = function() {
